@@ -3,6 +3,7 @@ import copy
 import logging
 import os
 import sys
+import json
 
 import numpy as np
 import torch
@@ -346,6 +347,12 @@ def get_parser():
         nargs="?",
         help="Whether to resume from the most recent saved model in the current log_dir.",
     )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default="",
+        help="Subfolder path where the logs will be written to.",
+    )
 
     # Weights & Biases
     parser.add_argument(
@@ -381,6 +388,10 @@ def main(config):
     else:
         resume = False
         mode = "w"
+
+    # Optionally add in another subfolder to the log path
+    if config.name:
+        config.log_dir = f"{config.log_dir}/{config.name}"
 
     if config.simulate_label_shift and config.use_target:
         config.log_dir = f"{config.log_dir}/{config.dataset}_split:{config.target_split}_alpha:{config.dirichlet_alpha}_seed:{config.seed}/{config.algorithm}_{config.estimation_method}_source_bal:{config.source_balanced}_pretrained:{config.pretrain_type}/lr:{config.lr}_wd:{config.weight_decay}_bs:{config.batch_size}_opt:{config.optimizer}/"
@@ -428,6 +439,8 @@ def main(config):
     # Record config
     logger.info("Config:")
     log_config(config, logger)
+    with open(f"{config.log_dir}/run.config", "w") as config_file:
+        json.dump({k: str(v) for k, v in vars(config).items()}, config_file)
 
     # Set random seed
     set_seed(config.seed)
