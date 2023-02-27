@@ -421,7 +421,6 @@ def main(config):
 
     # Set device
     if torch.cuda.is_available():
-
         device_count = torch.cuda.device_count()
         if len(config.device) > device_count:
             raise ValueError(
@@ -639,7 +638,6 @@ def main(config):
         logger.info("Done loading source dataloaders.")
 
     if config.use_target:
-
         logger.info("Loading target dataloaders...")
 
         dataloaders["target_train"] = DataLoader(
@@ -693,12 +691,9 @@ def main(config):
     # label imbalance (or missing labels).
 
     if not config.eval_only:
-
         if config.test_time_adapt:
-
             logger.info("Testing time adapting ...")
             if config.use_source_model:
-
                 adapt(
                     algorithm=algorithm,
                     config=config,
@@ -711,9 +706,7 @@ def main(config):
                     "Test time adaptation is not supported without source models."
                 )
         else:
-
             if "NoisyStudent" in config.algorithm:
-
                 logger.info("Loading teacher model ...")
 
                 teacher_model = initialize_model(
@@ -738,7 +731,6 @@ def main(config):
                 noisy_iterations = config.noisystudent_kwargs["iterations"]
 
                 for iteration in range(noisy_iterations):
-
                     logger.info(f"Starting iteration {iteration} for Noisy Student...")
 
                     noisy_data_transforms = initialize_transform(
@@ -824,7 +816,6 @@ def main(config):
                     logger.info(f"Done iteration {iteration} for Noisy Student.")
 
             else:
-
                 # Resume from most recent model in log_dir
                 resume_success = False
                 if resume:
@@ -851,7 +842,6 @@ def main(config):
                     datasets=full_dataset,
                 )
     else:
-
         logger.info(f"Evaluating models from {config.source_model_path}")
 
         eval_models(
@@ -871,9 +861,7 @@ def main(config):
 
     return config.log_dir
 
-
 if __name__ == "__main__":
-
     parser = get_parser()
     args = parser.parse_args()
     main(args)
