@@ -1,4 +1,6 @@
+import itertools
 import logging
+import functools
 
 import antialiased_cnns
 import numpy as np
@@ -26,11 +28,11 @@ from RLSbench.models.clip import (
 )
 
 CIFAR_ARCHITECTURES = {
-    "resnet18": CIFARResNet18,
-    "resnet34": CIFARResNet34,
-    "resnet50": CIFARResNet50,
-    "resnet101": CIFARResNet101,
-    "efficientnet_b0": CIFAREfficientNetB0,
+    "cifar_resnet18": CIFARResNet18,
+    "cifar_resnet34": CIFARResNet34,
+    "cifar_resnet50": CIFARResNet50,
+    "cifar_resnet101": CIFARResNet101,
+    "cifar_efficientnet_b0": CIFAREfficientNetB0,
 }
 
 CLIP_ARCHITECTURES = {
@@ -56,6 +58,31 @@ OTHER_ARCHITECTURES = (
     "MLP",
     "logistic_regression",
 )
+
+SELF_DEFINED_ARCHITECTURES = {}
+
+MODEL_REGISTRY = list(
+    dict.fromkeys(
+        itertools.chain(
+            CIFAR_ARCHITECTURES,
+            CLIP_ARCHITECTURES,
+            TORCHVISION_ARCHITECTURES,
+            OTHER_ARCHITECTURES,
+        )
+    )
+)
+
+
+def register_model(model_name):
+    def register(model):
+        if model_name in OTHER_ARCHITECTURES:
+            raise ValueError(f"Model with name {model_name} already registered!")
+        SELF_DEFINED_ARCHITECTURES[model_name] = model
+        MODEL_REGISTRY.append(model_name)
+        return model
+
+    return register
+
 
 logger = logging.getLogger("label_shift")
 
@@ -98,7 +125,7 @@ def initialize_model(
             - model: a model that is equivalent to nn.Sequential(featurizer, classifier)
     """
 
-    if "cifar" in dataset_name:
+    if "cifar" in model_name:
         # For the cifar dataset we use specialized versions of the models due to some size differences
         model = initialize_cifar_model(
             model_name,
@@ -130,6 +157,9 @@ def initialize_model(
 
         if not featurize:
             model = nn.Sequential(*model)
+
+    elif model_name in SELF_DEFINED_ARCHITECTURES:
+        model = [SELF_DEFINED_ARCHITECTURES[model_name](num_classes=num_classes)]
 
     elif model_name in ("mimic_network"):
         from RLSbench.models.mimic_model import Transformer

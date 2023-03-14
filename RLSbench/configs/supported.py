@@ -59,24 +59,9 @@ collate_functions = ["mimic_readmission", "mimic_mortality", "None"]
 
 # See models/initializer.py
 # We register all models that are added to any of the following lists of architectures
-from RLSbench.models.initializer import (
-    CIFAR_ARCHITECTURES,
-    CLIP_ARCHITECTURES,
-    TORCHVISION_ARCHITECTURES,
-    OTHER_ARCHITECTURES,
-)
+from RLSbench.models.initializer import MODEL_REGISTRY
 
-# Preserve order but only keep unique model names
-models = list(
-    dict.fromkeys(
-        itertools.chain(
-            CIFAR_ARCHITECTURES,
-            CLIP_ARCHITECTURES,
-            TORCHVISION_ARCHITECTURES,
-            OTHER_ARCHITECTURES,
-        )
-    )
-)
+models = MODEL_REGISTRY
 
 # Pre-training type
 pretrainining_options = ["clip", "imagenet", "swav", "rand", "bert"]
