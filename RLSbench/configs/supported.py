@@ -77,6 +77,7 @@ schedulers = [
     "StepLR",
     "FixMatchLR",
     "MultiStepLR",
+    "OneCycleLR",
 ]
 
 # See losses.py

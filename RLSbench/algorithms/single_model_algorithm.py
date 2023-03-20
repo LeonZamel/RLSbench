@@ -152,7 +152,5 @@ class SingleModelAlgorithm(Algorithm):
         for scheduler in self.schedulers:
             if scheduler is None:
                 continue
-            if scheduler.step_every_batch:
-                step_scheduler(scheduler)
-            elif is_epoch:
+            if scheduler.step_every_batch or is_epoch:
                 step_scheduler(scheduler)

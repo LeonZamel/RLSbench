@@ -1,5 +1,11 @@
 import numpy as np
-from torch.optim.lr_scheduler import LambdaLR, MultiStepLR, ReduceLROnPlateau, StepLR
+from torch.optim.lr_scheduler import (
+    LambdaLR,
+    MultiStepLR,
+    ReduceLROnPlateau,
+    StepLR,
+    OneCycleLR,
+)
 
 
 def initialize_scheduler(config, optimizer, n_train_steps):
@@ -59,6 +65,15 @@ def initialize_scheduler(config, optimizer, n_train_steps):
         scheduler = MultiStepLR(optimizer, **config.scheduler_kwargs)
         step_every_batch = False
         use_metric = False
+    elif config.scheduler == "OneCycleLR":
+        # We only call the step function every batch, so we set steps per epoch to 1
+        scheduler = OneCycleLR(
+            optimizer,
+            max_lr=config.lr,
+            steps_per_epoch=1,
+            epochs=config.n_epochs,
+        )
+        step_every_batch = False
     else:
         raise ValueError(f"Scheduler: {config.scheduler} not supported.")
 
