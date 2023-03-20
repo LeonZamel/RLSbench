@@ -3,6 +3,8 @@ import copy
 from RLSbench.configs.algorithm import algorithm_defaults
 from RLSbench.configs.datasets import dataset_defaults
 
+DEFAULT_OVERRIDE_KEY = "override_defaults"
+
 
 def populate_defaults(config):
     """Populates hyperparameters with defaults implied by choices
@@ -155,6 +157,13 @@ def populate_config(config, template: dict, force_compatibility=False):
                 raise ValueError(f"Argument {key} must be set to {val}")
 
         else:  # config[key] expected to be a kwarg dict
+            if (
+                DEFAULT_OVERRIDE_KEY in d_config[key]
+                and d_config[key][DEFAULT_OVERRIDE_KEY]
+            ):
+                # If the user wants to remove the default kwargs then they need to pass [DEFAULT_OVERRIDE_KEY]=True
+                del d_config[key][DEFAULT_OVERRIDE_KEY]
+                continue
             for kwargs_key, kwargs_val in val.items():
                 if kwargs_key not in d_config[key] or d_config[key][kwargs_key] is None:
                     d_config[key][kwargs_key] = kwargs_val
