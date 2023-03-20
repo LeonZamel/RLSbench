@@ -84,6 +84,17 @@ def initialize_transform(
         )
     elif additional_transform_name == "weak":
         transform = add_weak_transform(config, transform_steps, default_normalization)
+    elif additional_transform_name == "flip_crop_jitter":
+        all_transform_steps = copy.deepcopy(transform_steps)
+        all_transform_steps.extend(
+            [
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomCrop(config.target_resolution, padding=4),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+                transforms.ToTensor(),
+            ]
+        )
+        transform = transforms.Compose(all_transform_steps)
     else:
         target_resolution = _get_target_resolution(config)
         transform_steps.append(

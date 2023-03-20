@@ -50,10 +50,7 @@ transforms = [
     "None",
 ]
 
-additional_transforms = [
-    "randaugment",
-    "weak",
-]
+additional_transforms = ["randaugment", "weak", "flip_crop_jitter"]
 collate_functions = ["mimic_readmission", "mimic_mortality", "None"]
 
 
