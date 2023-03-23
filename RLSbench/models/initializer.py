@@ -160,6 +160,9 @@ def initialize_model(
 
     elif model_name in SELF_DEFINED_ARCHITECTURES:
         model = [SELF_DEFINED_ARCHITECTURES[model_name](num_classes=num_classes)]
+        if not featurize:
+            # Intermediate fix
+            model = nn.Sequential(*model)
 
     elif model_name in ("mimic_network"):
         from RLSbench.models.mimic_model import Transformer
