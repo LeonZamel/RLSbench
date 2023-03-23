@@ -20,6 +20,7 @@ from RLSbench.utils import (
 )
 
 from RLSbench.collate_functions import initialize_collate_function
+from RLSbench.datasets.data_utils import CustomConcatDataset
 
 logger = logging.getLogger("label_shift")
 
@@ -402,12 +403,30 @@ def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
             algorithm.train()
             torch.set_grad_enabled(True)
 
-            algorithm.adapt(
-                source_loader=dataloaders["source_train"],
-                target_loader=dataloaders["target_train"],
-                target_marginal=estimated_marginal[f"{config.estimation_method}"],
-                source_marginal=estimated_marginal["source"],
-            )
+            if not config.adapt_with_source:
+                algorithm.adapt(
+                    source_loader=dataloaders["source_train"],
+                    target_loader=dataloaders["target_train"],
+                    target_marginal=estimated_marginal[f"{config.estimation_method}"],
+                    source_marginal=estimated_marginal["source"],
+                )
+            else:
+                source_and_target_train = CustomConcatDataset(
+                    [datasets["source_train"], datasets["target_train"]]
+                )
+                adaptation_dataloader = DataLoader(
+                    source_and_target_train,
+                    batch_size=config.batch_size,
+                    shuffle=True,
+                    num_workers=config.num_workers,
+                    pin_memory=True,
+                )
+                algorithm.adapt(
+                    source_loader=dataloaders["source_train"],
+                    target_loader=adaptation_dataloader,
+                    target_marginal=estimated_marginal[f"{config.estimation_method}"],
+                    source_marginal=estimated_marginal["source"],
+                )
 
             logger.info(f"Adapting complete. Evaluating on test set...")
 

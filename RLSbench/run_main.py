@@ -286,7 +286,12 @@ def get_parser():
         nargs="?",
         help="Specify if we are doing test time adaptation",
     )
-
+    parser.add_argument(
+        "--adapt_with_source",
+        action="store_true",
+        default=False,
+        help="Specify if adaptation should be done ",
+    )
     # Optimization
     parser.add_argument("--n_epochs", type=int)
     parser.add_argument(
@@ -693,18 +698,16 @@ def main(config):
     if not config.eval_only:
         if config.test_time_adapt:
             logger.info("Testing time adapting ...")
-            if config.use_source_model:
-                adapt(
-                    algorithm=algorithm,
-                    config=config,
-                    dataloaders=dataloaders,
-                    results_logger=results_logger,
-                    datasets=full_dataset,
-                )
-            else:
-                raise ValueError(
-                    "Test time adaptation is not supported without source models."
-                )
+            assert (
+                config.use_source_model is not None
+            ), "Test time adaptation is not supported without source models."
+            adapt(
+                algorithm=algorithm,
+                config=config,
+                dataloaders=dataloaders,
+                results_logger=results_logger,
+                datasets=full_dataset,
+            )
         else:
             if "NoisyStudent" in config.algorithm:
                 logger.info("Loading teacher model ...")
