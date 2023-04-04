@@ -290,7 +290,13 @@ def get_parser():
         "--adapt_with_source",
         action="store_true",
         default=False,
-        help="Specify if adaptation should be done ",
+        help="Specify if adaptation should be done with source data",
+    )
+    parser.add_argument(
+        "--adapt_with_source_ratio_balanced",
+        action="store_true",
+        default=False,
+        help="If the adaption with source data should be balanced equally",
     )
     # Optimization
     parser.add_argument("--n_epochs", type=int)
@@ -382,6 +388,9 @@ def get_parser():
 def main(config):
     # config = parser.parse_args()
     config = populate_defaults(config)
+
+    # Make sure parameters are sane
+    assert config.adapt_with_source or not config.adapt_with_source_ratio_balanced
 
     # Initialize logs
     if os.path.exists(config.log_dir) and config.resume:

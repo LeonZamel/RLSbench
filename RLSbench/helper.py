@@ -20,7 +20,7 @@ from RLSbench.utils import (
 )
 
 from RLSbench.collate_functions import initialize_collate_function
-from RLSbench.datasets.data_utils import CustomConcatDataset
+from RLSbench.datasets.data_utils import CustomConcatDataset, Subset
 
 logger = logging.getLogger("label_shift")
 
@@ -411,9 +411,23 @@ def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
                     source_marginal=estimated_marginal["source"],
                 )
             else:
-                source_and_target_train = CustomConcatDataset(
-                    [datasets["source_train"], datasets["target_train"]]
-                )
+                if config.adapt_with_source_ratio_balanced:
+                    length = min(
+                        len(datasets["source_train"]), len(datasets["target_train"])
+                    )
+                    source = Subset(
+                        datasets["source_train"],
+                        torch.randperm(len(datasets["source_train"]))[:length],
+                    )
+                    target = Subset(
+                        datasets["target_train"],
+                        torch.randperm(len(datasets["target_train"]))[:length],
+                    )
+                    source_and_target_train = CustomConcatDataset([source, target])
+                else:
+                    source_and_target_train = CustomConcatDataset(
+                        [datasets["source_train"], datasets["target_train"]]
+                    )
                 adaptation_dataloader = DataLoader(
                     source_and_target_train,
                     batch_size=config.batch_size,
