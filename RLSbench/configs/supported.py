@@ -42,6 +42,7 @@ label_shift_adapt = ["MLLS", "true", "RLLS", "None", "baseline"]
 # See transforms.py
 transforms = [
     "image_base",
+    "to_tensor",
     "image_resize_and_center_crop",
     "image_none",
     "rxrx1",
