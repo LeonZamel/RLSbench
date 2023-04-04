@@ -1,6 +1,7 @@
 from RLSbench.datasets.data_utils import *
 from RLSbench.datasets.get_dataset import *
 
+
 benchmark_datasets = [
     "camelyon",
     "iwildcam",
@@ -20,6 +21,7 @@ benchmark_datasets = [
     "retiring_adult",
     "mimic_readmission",
 ]
+
 
 supported_datasets = benchmark_datasets
 
@@ -43,6 +45,11 @@ dataset_map = {
     "retiring_adult": get_retiring_adult,
     "mimic_readmission": get_mimic_readmission,
 }
+
+
+def register_dataset(name, dataset_constructor):
+    supported_datasets.append(name)
+    dataset_map[name] = dataset_constructor
 
 
 def get_dataset(
