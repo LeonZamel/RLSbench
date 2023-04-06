@@ -1,5 +1,7 @@
 import logging
 
+from RLSbench import nn
+
 from RLSbench.algorithms.BN_adapt import BN_adapt
 from RLSbench.algorithms.BN_adapt_adv import BN_adapt_adv
 from RLSbench.algorithms.CDAN import CDAN
@@ -14,10 +16,15 @@ from RLSbench.algorithms.pseudolabel import PseudoLabel
 from RLSbench.algorithms.SENTRY import SENTRY
 from RLSbench.algorithms.TENT import TENT
 
+
+from RLSbench.losses import initialize_loss
+from RLSbench.models.initializer import initialize_model
+from RLSbench.models.model_utils import linear_probe
+
 logger = logging.getLogger("label_shift")
 
 
-def initialize_algorithm(config, datasets, dataloader):
+def initialize_algorithm(config, model, datasets, dataloader):
     logger.info(f"Initializing algorithm {config.algorithm} ...")
 
     source_dataset = datasets["source_train"]
@@ -47,11 +54,68 @@ def initialize_algorithm(config, datasets, dataloader):
         "IS-ERM-oracle-rand",
         "IS-ERM-oracle-imagenet",
     ):
+        logger.info("Initializing model...")
+
+        if config.algorithm.startswith("IW"):
+            use_target_marginal = True
+        else:
+            use_target_marginal = False
+
+        if config.source_balanced or use_target_marginal:
+            loss = initialize_loss(config.loss_function, reduction="none")
+        else:
+            loss = initialize_loss(config.loss_function)
+
+        assert not config.featurize
+
+        model = initialize_model(
+            model_name=config.model,
+            dataset_name=config.dataset,
+            num_classes=config.num_classes,
+            featurize=config.featurize,
+            pretrained=config.pretrained,
+            pretrained_path=config.pretrained_path,
+            config=config,
+        )
+
+        if config.pretrained and "clip" in config.model:
+            assert False, "Currently not supported"
+            model = linear_probe(
+                model,
+                dataloader,
+                device=config.device,
+                progress_bar=config.progress_bar,
+            )
+
         algorithm = ERM(
             config=config,
-            dataloader=trainloader_source,
-            loss_function=config.loss_function,
+            model=model,
+            loss=loss,
             n_train_steps=n_train_steps,
+            use_marginal=use_target_marginal,
+        )
+
+    elif config.algorithm in ("BN_adapt", "IS-BN_adapt"):
+        logger.info("Initializing model...")
+
+        assert not config.featurize
+        assert not config.pretrained
+
+        model = initialize_model(
+            model_name=config.model,
+            dataset_name=config.dataset,
+            num_classes=config.num_classes,
+            featurize=config.featurize,
+            pretrained=config.pretrained,
+        )
+
+        model.to(config.device)
+        algorithm = BN_adapt(config=config)
+
+    elif True:
+        # Rework currently not supporting other methods
+        raise ValueError(
+            f"Algorithm {config.algorithm} not recognized or currently not supported"
         )
 
     elif config.algorithm in ("ERM-adv"):
@@ -129,9 +193,6 @@ def initialize_algorithm(config, datasets, dataloader):
 
     elif config.algorithm in ("CORAL", "IS-CORAL"):
         algorithm = CORAL(config=config)
-
-    elif config.algorithm in ("BN_adapt", "IS-BN_adapt"):
-        algorithm = BN_adapt(config=config)
 
     elif config.algorithm in ("BN_adapt-adv", "IS-BN_adapt-adv"):
         algorithm = BN_adapt_adv(config=config)

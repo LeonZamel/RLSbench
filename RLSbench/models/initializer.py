@@ -107,7 +107,8 @@ def initialize_model(
     in_features=None,
     pretrained=False,
     pretrained_path=None,
-    data_dir=None,
+    model_modifiers=None,
+    config=None,
 ):
     """
     Initializes models according to the config
@@ -135,7 +136,6 @@ def initialize_model(
             in_features,
             pretrained,
             pretrained_path,
-            data_dir,
         )
 
     elif model_name in TORCHVISION_ARCHITECTURES:
@@ -159,16 +159,20 @@ def initialize_model(
             model = nn.Sequential(*model)
 
     elif model_name in SELF_DEFINED_ARCHITECTURES:
-        model = [SELF_DEFINED_ARCHITECTURES[model_name](num_classes=num_classes)]
-        if not featurize:
-            # Intermediate fix
-            model = nn.Sequential(*model)
+        assert (
+            not featurize
+        ), "Featurize currently not supported with self defined models"
+        model = SELF_DEFINED_ARCHITECTURES[model_name](num_classes=num_classes)
 
     elif model_name in ("mimic_network"):
         from RLSbench.models.mimic_model import Transformer
 
         featurizer = Transformer(
-            data_dir, embedding_size=128, dropout=0.5, layers=2, heads=2
+            config.root_dir,
+            embedding_size=128,
+            dropout=0.5,
+            layers=2,
+            heads=2,
         )
         classifier = nn.Linear(featurizer.d_out, 2)
         model = (featurizer, classifier)
@@ -215,6 +219,11 @@ def initialize_model(
     if model == None:
         raise ValueError(f"Model: {model_name} not recognized.")
 
+    if model_modifiers:
+        logger.info(f"Applying {len(model_modifiers)} model modifiers...")
+        for mm in model_modifiers:
+            model = mm(model)
+
     return model
 
 
@@ -226,7 +235,6 @@ def initialize_cifar_model(
     in_features=None,
     pretrained=False,
     pretrained_path=None,
-    data_dir=None,
 ):
     if model_name not in CIFAR_ARCHITECTURES:
         raise ValueError(f"CIFAR model {model_name} not recognized.")

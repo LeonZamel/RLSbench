@@ -9,19 +9,7 @@ logger = logging.getLogger("label_shift")
 
 
 class BN_adapt(Algorithm):
-    def __init__(self, config):
-        logger.info("Initializing model...")
-
-        model = initialize_model(
-            model_name=config.model,
-            dataset_name=config.dataset,
-            num_classes=config.num_classes,
-            featurize=False,
-            pretrained=False,
-        )
-
-        model.to(config.device)
-
+    def __init__(self, config, model):
         # initialize module
         super().__init__(
             device=config.device,

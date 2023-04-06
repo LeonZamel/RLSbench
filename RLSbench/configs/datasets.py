@@ -569,4 +569,42 @@ dataset_defaults = {
         "evaluate_every": 1,
         # 'save_every': 1
     },
+    "imagenet": {
+        "num_classes": 1000,
+        "model": "resnet50",
+        "optimizer": "SGD",
+        "optimizer_kwargs": {"momentum": 0.9},
+        "batch_size": 256,
+        "n_epochs": 90,
+        "lr": 0.1,
+        "weight_decay": 0.0001,
+        # 'scheduler': None,
+        "collate_function": "None",
+        "scheduler": "StepLR",
+        "scheduler_kwargs": {"gamma": 0.1, "step_size": 30},
+        "pretrained": True,
+        "pretrain_type": "imagenet",
+        "transform": "image_base",
+        "resize_resolution": 256,
+        "target_resolution": 224,
+        "default_normalization": True,
+        "dann_kwargs": {
+            "featurizer_lr": 0.001,
+            "classifier_lr": 0.01,
+            "discriminator_lr": 0.01,
+            "penalty_weight": 1.0,
+        },
+        "cdan_kwargs": {
+            "featurizer_lr": 0.001,
+            "classifier_lr": 0.01,
+            "discriminator_lr": 0.01,
+            "penalty_weight": 1.0,
+        },
+        "coal_kwargs": {
+            "featurizer_lr": 0.001,
+            "classifier_lr": 0.01,
+        },
+        "evaluate_every": 1,
+        # 'save_every': 1
+    },
 }

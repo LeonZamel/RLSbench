@@ -1,5 +1,7 @@
 import itertools
 
+from model_modifiers import MODEL_MODIFIERS_REGISTRY
+
 # See algorithms/initializer.py
 algorithms = [
     "ERM",
@@ -80,3 +82,5 @@ schedulers = [
 
 # See losses.py
 losses = ["cross_entropy", "cross_entropy_logits"]
+
+model_modifiers = MODEL_MODIFIERS_REGISTRY.available

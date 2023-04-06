@@ -3,48 +3,13 @@ import logging
 import torch
 import torch.nn as nn
 from RLSbench.algorithms.single_model_algorithm import SingleModelAlgorithm
-from RLSbench.losses import initialize_loss
-from RLSbench.models.initializer import initialize_model
-from RLSbench.models.model_utils import linear_probe
 from RLSbench.utils import move_to
 
 logger = logging.getLogger("label_shift")
 
 
 class ERM(SingleModelAlgorithm):
-    def __init__(self, config, dataloader, loss_function, n_train_steps):
-        logger.info("Initializing model...")
-
-        if config.algorithm.startswith("IW"):
-            self.use_target_marginal = True
-        else:
-            self.use_target_marginal = False
-
-        if config.source_balanced or self.use_target_marginal:
-            loss = initialize_loss(loss_function, reduction="none")
-        else:
-            loss = initialize_loss(loss_function)
-
-        model = initialize_model(
-            model_name=config.model,
-            dataset_name=config.dataset,
-            num_classes=config.num_classes,
-            featurize=True,
-            pretrained=config.pretrained,
-            pretrained_path=config.pretrained_path,
-            data_dir=config.root_dir,
-        )
-
-        if config.pretrained and "clip" in config.model:
-            model = linear_probe(
-                model,
-                dataloader,
-                device=config.device,
-                progress_bar=config.progress_bar,
-            )
-
-        model = nn.Sequential(*model)
-
+    def __init__(self, config, model, loss, n_train_steps, use_marginal):
         # initialize module
         super().__init__(
             config=config,
@@ -52,6 +17,7 @@ class ERM(SingleModelAlgorithm):
             loss=loss,
             n_train_steps=n_train_steps,
         )
+        self.use_marginal = use_marginal
 
         self.use_unlabeled_y = (
             config.use_unlabeled_y
