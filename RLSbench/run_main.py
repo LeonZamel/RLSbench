@@ -181,6 +181,8 @@ def get_parser():
         type=str,
         help="Specify a path to pretrained model weights",
     )
+    # Can pass multiple model modifiers with --model_modifier abc --model_modifier def ...
+    parser.add_argument("--model_modifier", nargs="*", default=[])
 
     # Transforms
     parser.add_argument("--transform", choices=supported.transforms)
