@@ -9,7 +9,7 @@ logger = logging.getLogger("label_shift")
 
 
 class ERM(SingleModelAlgorithm):
-    def __init__(self, config, model, loss, n_train_steps, use_marginal):
+    def __init__(self, config, model, loss, n_train_steps, use_target_marginal):
         # initialize module
         super().__init__(
             config=config,
@@ -17,7 +17,7 @@ class ERM(SingleModelAlgorithm):
             loss=loss,
             n_train_steps=n_train_steps,
         )
-        self.use_marginal = use_marginal
+        self.use_target_marginal = use_target_marginal
 
         self.use_unlabeled_y = (
             config.use_unlabeled_y

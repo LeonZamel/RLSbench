@@ -10,6 +10,9 @@ class Registry:
             )
         self._registry[name] = object
 
+    def get(self, name):
+        return self._registry[name]
+
     @property
     def available(self):
         return list(self._registry.keys())

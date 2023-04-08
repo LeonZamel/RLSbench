@@ -181,6 +181,11 @@ def get_parser():
         type=str,
         help="Specify a path to pretrained model weights",
     )
+    parser.add_argument(
+        "--featurize",
+        action="store_true",
+        default=False,
+    )
     # Can pass multiple model modifiers with --model_modifier abc --model_modifier def ...
     parser.add_argument("--model_modifier", nargs="*", default=[])
 

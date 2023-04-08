@@ -370,88 +370,73 @@ def evaluate(algorithm, dataloaders, epoch, results_logger, config, log=True):
 
 def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
     if "BN_adapt" in config.algorithm or "TENT" in config.algorithm:
-        source_model_path = config.source_model_path
+        epoch = algorithm.epoch
+        _, estimated_marginal = evaluate(
+            algorithm, dataloaders, epoch, results_logger, config, log=False
+        )
 
-        model_paths = []
-        for root, dirs, files in os.walk(source_model_path):
-            for file in files:
-                if file.endswith(".pth"):
-                    model_path = os.path.join(root, file)
-                    model_paths.append(model_path)
+        logger.info(f"Adapting model at epoch {epoch}")
 
-        for model_path in model_paths:
-            logger.info(f"Loading model from {model_path}")
-
-            # import pdb; pdb.set_trace()
-
-            epoch = load(algorithm, model_path, device=config.device)
-
-            _, estimated_marginal = evaluate(
-                algorithm, dataloaders, epoch, results_logger, config, log=False
+        if "IS-BN_adapt" in config.algorithm or "IS-TENT" in config.algorithm:
+            dataloaders["target_train"] = rebalance_loader(
+                datasets["target_train"],
+                config,
+                model=algorithm.model,
+                use_true_target=False,
             )
 
-            logger.info(f"Adapting model from {model_path} at epoch {epoch}")
+        algorithm.train()
+        torch.set_grad_enabled(True)
 
-            if "IS-BN_adapt" in config.algorithm or "IS-TENT" in config.algorithm:
-                dataloaders["target_train"] = rebalance_loader(
+        if not config.adapt_with_source:
+            algorithm.adapt(
+                source_loader=dataloaders["source_train"],
+                target_loader=dataloaders["target_train"],
+                target_marginal=estimated_marginal[f"{config.estimation_method}"],
+                source_marginal=estimated_marginal["source"],
+            )
+        else:
+            if config.adapt_with_source_ratio_balanced:
+                length = min(
+                    len(datasets["source_train"]), len(datasets["target_train"])
+                )
+                source = Subset(
+                    datasets["source_train"],
+                    torch.randperm(len(datasets["source_train"]))[:length],
+                )
+                target = Subset(
                     datasets["target_train"],
-                    config,
-                    model=algorithm.model,
-                    use_true_target=False,
+                    torch.randperm(len(datasets["target_train"]))[:length],
                 )
-
-            algorithm.train()
-            torch.set_grad_enabled(True)
-
-            if not config.adapt_with_source:
-                algorithm.adapt(
-                    source_loader=dataloaders["source_train"],
-                    target_loader=dataloaders["target_train"],
-                    target_marginal=estimated_marginal[f"{config.estimation_method}"],
-                    source_marginal=estimated_marginal["source"],
-                )
+                source_and_target_train = CustomConcatDataset([source, target])
             else:
-                if config.adapt_with_source_ratio_balanced:
-                    length = min(
-                        len(datasets["source_train"]), len(datasets["target_train"])
-                    )
-                    source = Subset(
-                        datasets["source_train"],
-                        torch.randperm(len(datasets["source_train"]))[:length],
-                    )
-                    target = Subset(
-                        datasets["target_train"],
-                        torch.randperm(len(datasets["target_train"]))[:length],
-                    )
-                    source_and_target_train = CustomConcatDataset([source, target])
-                else:
-                    source_and_target_train = CustomConcatDataset(
-                        [datasets["source_train"], datasets["target_train"]]
-                    )
-                adaptation_dataloader = DataLoader(
-                    source_and_target_train,
-                    batch_size=config.batch_size,
-                    shuffle=True,
-                    num_workers=config.num_workers,
-                    pin_memory=True,
+                source_and_target_train = CustomConcatDataset(
+                    [datasets["source_train"], datasets["target_train"]]
                 )
-                algorithm.adapt(
-                    source_loader=dataloaders["source_train"],
-                    target_loader=adaptation_dataloader,
-                    target_marginal=estimated_marginal[f"{config.estimation_method}"],
-                    source_marginal=estimated_marginal["source"],
-                )
-
-            logger.info(f"Adapting complete. Evaluating on test set...")
-
-            # if (epoch) % config.evaluate_every == 0:
-            _, estimated_marginal = evaluate(
-                algorithm, dataloaders, epoch, results_logger, config
+            adaptation_dataloader = DataLoader(
+                source_and_target_train,
+                batch_size=config.batch_size,
+                shuffle=True,
+                num_workers=config.num_workers,
+                pin_memory=True,
+            )
+            algorithm.adapt(
+                source_loader=dataloaders["source_train"],
+                target_loader=adaptation_dataloader,
+                target_marginal=estimated_marginal[f"{config.estimation_method}"],
+                source_marginal=estimated_marginal["source"],
             )
 
-            algorithm.reset()
+        logger.info(f"Adapting complete. Evaluating on test set...")
 
-            logger.info("Epoch %d done." % epoch)
+        # if (epoch) % config.evaluate_every == 0:
+        _, estimated_marginal = evaluate(
+            algorithm, dataloaders, epoch, results_logger, config
+        )
+
+        algorithm.reset()
+
+        logger.info("Epoch %d done." % epoch)
 
     elif "CORAL" in config.algorithm:
         # For best model evaluation
@@ -526,30 +511,16 @@ def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
 
 def eval_models(algorithm, dataloaders, results_logger, config):
     if "adv" not in config.algorithm:
-        logger.info("Evaluating all models ... ")
-        source_model_path = config.source_model_path
+        logger.info("Evaluating model ... ")
+        epoch = 0
+        _, estimated_marginal = evaluate(
+            algorithm, dataloaders, epoch, results_logger, config
+        )
 
-        model_paths = []
-        for root, dirs, files in os.walk(source_model_path):
-            for file in files:
-                if file.endswith(".pth"):
-                    model_path = os.path.join(root, file)
-                    model_paths.append(model_path)
-
-        for model_path in model_paths:
-            logger.info(f"Loading model from {model_path}")
-
-            epoch = load(algorithm, model_path, device=config.device)
-
-            logger.info(f"Evaluating model at epoch {epoch}...")
-
-            _, estimated_marginal = evaluate(
-                algorithm, dataloaders, epoch, results_logger, config
-            )
-
-            logger.info("Epoch %d done." % epoch)
+        logger.info("Done evaluating.")
 
     else:
+        assert False, "Currently not supported"
         logger.info("Evaluating best model ... ")
         # For best model evaluation
         source_model_path = config.source_model_path

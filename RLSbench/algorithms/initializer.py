@@ -1,7 +1,5 @@
 import logging
 
-from RLSbench import nn
-
 from RLSbench.algorithms.BN_adapt import BN_adapt
 from RLSbench.algorithms.BN_adapt_adv import BN_adapt_adv
 from RLSbench.algorithms.CDAN import CDAN
@@ -20,11 +18,13 @@ from RLSbench.algorithms.TENT import TENT
 from RLSbench.losses import initialize_loss
 from RLSbench.models.initializer import initialize_model
 from RLSbench.models.model_utils import linear_probe
+from RLSbench.model_modifiers import MODEL_MODIFIERS_REGISTRY
+from RLSbench.utils import load_one_from_dir
 
 logger = logging.getLogger("label_shift")
 
 
-def initialize_algorithm(config, model, datasets, dataloader):
+def initialize_algorithm(config, datasets, dataloader):
     logger.info(f"Initializing algorithm {config.algorithm} ...")
 
     source_dataset = datasets["source_train"]
@@ -92,7 +92,7 @@ def initialize_algorithm(config, model, datasets, dataloader):
             model=model,
             loss=loss,
             n_train_steps=n_train_steps,
-            use_marginal=use_target_marginal,
+            use_target_marginal=use_target_marginal,
         )
 
     elif config.algorithm in ("BN_adapt", "IS-BN_adapt"):
@@ -203,4 +203,18 @@ def initialize_algorithm(config, model, datasets, dataloader):
     else:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
 
+    if config.source_model_path:
+        logger.info("Loading from checkpoint...")
+        source_model_path = config.source_model_path
+        epoch = load_one_from_dir(algorithm, source_model_path, config.device)
+        logger.info(f"Loaded at epoch {epoch}")
+
+    model_modifiers = config.model_modifier
+    if model_modifiers:
+        model = algorithm.model
+        logger.info(f"Applying {len(model_modifiers)} model modifiers...")
+        for mm_name in model_modifiers:
+            mm = MODEL_MODIFIERS_REGISTRY.get(mm_name)
+            model = mm(model)
+        algorithm.model = model
     return algorithm

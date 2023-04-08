@@ -26,7 +26,6 @@ from RLSbench.models.clip import (
     ClipViTB32,
     ClipViTL14,
 )
-from model_modifiers import MODEL_MODIFIERS_REGISTRY
 
 CIFAR_ARCHITECTURES = {
     "cifar_resnet18": CIFARResNet18,
@@ -108,7 +107,6 @@ def initialize_model(
     in_features=None,
     pretrained=False,
     pretrained_path=None,
-    model_modifiers=None,
     config=None,
 ):
     """
@@ -219,12 +217,6 @@ def initialize_model(
 
     if model == None:
         raise ValueError(f"Model: {model_name} not recognized.")
-
-    if model_modifiers:
-        logger.info(f"Applying {len(model_modifiers)} model modifiers...")
-        for mm_name in model_modifiers:
-            mm = MODEL_MODIFIERS_REGISTRY[mm_name]
-            model = mm(model)
 
     return model
 
