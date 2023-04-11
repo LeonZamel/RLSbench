@@ -16,6 +16,7 @@ class BN_adapt(Algorithm):
         )
 
         self.model = model
+        self.epoch = "UNKNOWN"
 
         self.source_balanced = config.source_balanced
         self.num_classes = config.num_classes

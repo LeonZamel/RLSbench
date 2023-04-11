@@ -99,7 +99,7 @@ def initialize_algorithm(config, datasets, dataloader):
         logger.info("Initializing model...")
 
         assert not config.featurize
-        assert not config.pretrained
+        # assert not config.pretrained
 
         model = initialize_model(
             model_name=config.model,
@@ -110,7 +110,7 @@ def initialize_algorithm(config, datasets, dataloader):
         )
 
         model.to(config.device)
-        algorithm = BN_adapt(config=config)
+        algorithm = BN_adapt(config, model)
 
     elif True:
         # Rework currently not supporting other methods

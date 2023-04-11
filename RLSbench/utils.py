@@ -315,11 +315,13 @@ def load(module, path, device=None, tries=2):
     if "state" in state:
         logger.info("MosaicML model detected")
         state = state["state"]["model"]
-        print(state.keys())
         state = {
             k.replace("module", "model"): v for k, v in state.items() if "module" in k
         }
-        print(state.keys())
+        del state["model.fc.weight"]
+        del state["model.fc.bias"]
+        module.load_state_dict(state, strict=False)
+        return None
 
     # If keys match perfectly, load_state_dict() will work
     try:

@@ -449,7 +449,7 @@ def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
 
         algorithm.reset()
 
-        logger.info("Epoch %d done." % epoch)
+        logger.info(f"Epoch {epoch} done.")
 
     elif "CORAL" in config.algorithm:
         # For best model evaluation
