@@ -156,6 +156,7 @@ def run_epoch(
     train,
     unlabeled_dataloader=None,
     estimated_marginal=None,
+    results_logger=None,
 ):
     if train:
         algorithm.train()
@@ -181,11 +182,14 @@ def run_epoch(
     # so we manually increment batch_idx
     batch_idx = 0
     train_y_pred = []
+    epoch_y_true = []
+    epoch_y_preds = []
+
     for labeled_batch in iterator:
         if unlabeled_dataloader:
             unlabeled_batch = next(unlabeled_data_iterator)
 
-            results = algorithm.update(
+            batch_results = algorithm.update(
                 labeled_batch,
                 unlabeled_batch,
                 target_marginal=estimated_marginal[f"{config.estimation_method}"],
@@ -195,12 +199,21 @@ def run_epoch(
             )
 
             if config.algorithm in ("SENTRY", "IW-FixMatch", "IW-PseudoLabel"):
-                train_y_pred.append(results["y_weak_pseudo_label"])
+                train_y_pred.append(batch_results["y_weak_pseudo_label"])
 
         else:
-            algorithm.update(labeled_batch, is_epoch_end=(batch_idx == last_batch_idx))
+            batch_results = algorithm.update(
+                labeled_batch, is_epoch_end=(batch_idx == last_batch_idx)
+            )
 
+        epoch_y_true.append(detach_and_clone(batch_results["y_true"]))
+        epoch_y_preds.append(detach_and_clone(batch_results["y_pred"]))
         batch_idx += 1
+
+    y_preds = collate_list(epoch_y_preds).cpu().numpy()
+    y_true = collate_list(epoch_y_true).cpu().numpy()
+    results = {"train_source_acc": get_acc(y_preds, y_true)}
+    logger.info(results)
 
     if len(train_y_pred) > 0:
         train_y_pred = collate_list(train_y_pred).detach().cpu().numpy()
@@ -258,6 +271,7 @@ def train(algorithm, dataloaders, results_logger, config, epoch_offset, datasets
                 train=True,
                 unlabeled_dataloader=dataloaders["target_train"],
                 estimated_marginal=estimated_marginal,
+                results_logger=results_logger,
             )
         else:
             target_average = run_epoch(
@@ -266,6 +280,7 @@ def train(algorithm, dataloaders, results_logger, config, epoch_offset, datasets
                 config,
                 train=True,
                 estimated_marginal=None,
+                results_logger=results_logger,
             )
 
         if (epoch + 1) % config.evaluate_every == 0:
@@ -322,9 +337,7 @@ def evaluate(algorithm, dataloaders, epoch, results_logger, config, log=True):
             for batch in iterator:
                 batch_results = algorithm.evaluate(batch)
                 epoch_y_true.append(detach_and_clone(batch_results["y_true"]))
-                y_preds = detach_and_clone(batch_results["y_pred"])
-
-                epoch_y_preds.append(y_preds)
+                epoch_y_preds.append(detach_and_clone(batch_results["y_pred"]))
 
             epoch_y_preds = collate_list(epoch_y_preds).cpu().numpy()
             epoch_y_true = collate_list(epoch_y_true).cpu().numpy()
