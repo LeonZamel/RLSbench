@@ -281,6 +281,7 @@ def load_one_from_dir(module, path, device=None):
 
     return load(module, model_path, device=device)
 
+
 def load(module, path, device=None, tries=2):
     """
     Handles loading weights saved from this repo/model into an algorithm/model.
@@ -309,6 +310,16 @@ def load(module, path, device=None, tries=2):
 
     if "state_dict" in state:
         state = state["state_dict"]
+
+    # Loading from MosaicML model
+    if "state" in state:
+        logger.info("MosaicML model detected")
+        state = state["state"]["model"]
+        print(state.keys())
+        state = {
+            k.replace("module", "model"): v for k, v in state.items() if "module" in k
+        }
+        print(state.keys())
 
     # If keys match perfectly, load_state_dict() will work
     try:
