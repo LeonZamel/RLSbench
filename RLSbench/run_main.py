@@ -694,7 +694,7 @@ def main(config):
 
     # Initialize algorithm & load pretrained weights if provided
 
-    if config.eval_only:
+    if config.test_time_adapt:
         config.pretrained = False
 
     if "NoisyStudent" not in config.algorithm:

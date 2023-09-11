@@ -10,6 +10,10 @@ class Registry:
             )
         self._registry[name] = object
 
+    def register_multiname(self, names, object):
+        for name in names:
+            self.register(name, object)
+
     def get(self, name):
         return self._registry[name]
 

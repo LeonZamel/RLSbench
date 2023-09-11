@@ -1,38 +1,8 @@
 # See algorithms/initializer.py
-algorithms = [
-    "ERM",
-    "IS-ERM",
-    "ERM-aug",
-    "IS-ERM-aug",
-    "ERM-oracle",
-    "IS-ERM-oracle",
-    "ERM-adv",
-    "DANN",
-    "CDANN",
-    "IW-DANN",
-    "IW-CDANN",
-    "IS-DANN",
-    "IS-CDANN",
-    "COAL",
-    "IW-COAL",
-    "SENTRY",
-    "IW-SENTRY",
-    "FixMatch",
-    "IW-FixMatch",
-    "IS-FixMatch",
-    "PseudoLabel",
-    "IS-PseudoLabel",
-    "NoisyStudent",
-    "IS-NoisyStudent",
-    "CORAL",
-    "IS-CORAL",
-    "BN_adapt",
-    "BN_adapt-adv",
-    "IS-BN_adapt",
-    "IS-BN_adapt-adv",
-    "TENT",
-    "IS-TENT",
-]
+
+from RLSbench.algorithms.initializer import ALGORITHMS_REGISTRY
+
+algorithms = ALGORITHMS_REGISTRY.available
 
 label_shift_adapt = ["MLLS", "true", "RLLS", "None", "baseline"]
 

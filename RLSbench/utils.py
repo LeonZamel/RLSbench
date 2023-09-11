@@ -268,21 +268,26 @@ def load_one_from_dir(module, path, device=None):
     """
     Given a directory, loads exactly one model from it
     """
-    model_paths = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".pth"):
-                model_path = os.path.join(root, file)
-                model_paths.append(model_path)
+    # If path is a directory, get exactly one model, if it is a path to a model file, load that one
+    if os.path.isdir(path):
+        model_paths = []
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith(".pth"):
+                    model_path = os.path.join(root, file)
+                    model_paths.append(model_path)
 
-    assert len(model_paths) == 1, "Only one model should be in the directory"
-    model_path = model_paths[0]
+        assert len(model_paths) == 1, "Exactly one model should be in the directory"
+        model_path = model_paths[0]
+    else:
+        model_path = path
+
     logger.info(f"Loading model from {model_path}")
 
     return load(module, model_path, device=device)
 
 
-def load(module, path, device=None, tries=2):
+def load(module, path, device=None, tries=2, delete_keys=[]):
     """
     Handles loading weights saved from this repo/model into an algorithm/model.
     Attempts to handle key mismatches between this module's state_dict and the loaded state_dict.
@@ -313,13 +318,14 @@ def load(module, path, device=None, tries=2):
 
     # Loading from MosaicML model
     if "state" in state:
+        # TODO: Make this more general
         logger.info("MosaicML model detected")
         state = state["state"]["model"]
         state = {
             k.replace("module", "model"): v for k, v in state.items() if "module" in k
         }
-        del state["model.fc.weight"]
-        del state["model.fc.bias"]
+        del state["model.classifier.2.weight"]
+        del state["model.classifier.2.bias"]
         module.load_state_dict(state, strict=False)
         return None
 
