@@ -69,10 +69,10 @@ def target_eval(model_preds, results, estimated_marginal, config, ytrue, cal=Non
     estimated_marginal[f"{prefix}RLLS"] = RLLS_ydist
     estimated_marginal[f"{prefix}true"] = target_ydist
 
-    logger.debug(f"Baseline prediction {pred_ydist}")
-    logger.debug(f"MLLS prediction {MLLS_ydist}")
-    logger.debug(f"RLLS prediction {RLLS_ydist}")
-    logger.debug(f"True prediction {target_ydist}")
+    # logger.debug(f"Baseline prediction {pred_ydist}")
+    # logger.debug(f"MLLS prediction {MLLS_ydist}")
+    # logger.debug(f"RLLS prediction {RLLS_ydist}")
+    # logger.debug(f"True prediction {target_ydist}")
 
     # if config.source_balanced:
     #     # import pdb; pdb.set_trace()
@@ -346,28 +346,36 @@ def evaluate(algorithm, dataloaders, epoch, results_logger, config, log=True):
             model_preds[dataset_name] = epoch_y_preds
 
     results["epoch"] = epoch
-    results["source_acc"] = get_acc(model_preds["source"], ytrue["source"])
+    if config.use_source:
+        results["source_acc"] = get_acc(model_preds["source"], ytrue["source"])
+        print("The accuracy", results["source_acc"])
+    else:
+        results["source_acc"] = 0
+        ytrue["source"] = None
 
     # import pdb; pdb.set_trace()
     if config.use_target:
-        assert (
-            "source" in ytrue.keys() and "target" in ytrue.keys()
-        ), "ytrue must contain source and target"
+        target_model_probs = softmax(model_preds["target"], axis=-1)
+        results[f"target_acc_no_im"] = get_acc(target_model_probs, ytrue["target"])
 
-        results, estimated_marginal = target_eval(
-            model_preds, results, estimated_marginal, config, ytrue
-        )
+        # assert (
+        #     "source" in ytrue.keys() and "target" in ytrue.keys()
+        # ), "ytrue must contain source and target"
 
-        # logger.info("Calibrating the model on source ... ")
+        # results, estimated_marginal = target_eval(
+        #     model_preds, results, estimated_marginal, config, ytrue
+        # )
 
-        # import pdb; pdb.set_trace()
+    # logger.info("Calibrating the model on source ... ")
 
-        # cal = VectorScaling(config.num_classes, bias=True, device=config.device)
-        # cal.fit(model_preds["source"], ytrue["source"])
+    # import pdb; pdb.set_trace()
 
-        # logger.info("Calibration done ....")
+    # cal = VectorScaling(config.num_classes, bias=True, device=config.device)
+    # cal.fit(model_preds["source"], ytrue["source"])
 
-        # results, estimated_marginal = target_eval(model_preds, results, estimated_marginal, config, ytrue, cal)
+    # logger.info("Calibration done ....")
+
+    # results, estimated_marginal = target_eval(model_preds, results, estimated_marginal, config, ytrue, cal)
 
     # results["cal_source_acc"] = get_acc(model_preds["source"], ytrue["source"])
 
@@ -382,11 +390,13 @@ def evaluate(algorithm, dataloaders, epoch, results_logger, config, log=True):
 
 
 def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
-    if "BN_adapt" in config.algorithm or "TENT" in config.algorithm:
+    # TODO: Fix this
+    if True:
+        # if "BN_adapt" in config.algorithm or "TENT" in config.algorithm:
         epoch = algorithm.epoch
-        _, estimated_marginal = evaluate(
-            algorithm, dataloaders, epoch, results_logger, config, log=False
-        )
+        # _, estimated_marginal = evaluate(
+        #     algorithm, dataloaders, epoch, results_logger, config, log=False
+        # )
 
         logger.info(f"Adapting model at epoch {epoch}")
 
@@ -405,8 +415,9 @@ def adapt(algorithm, dataloaders, results_logger, config, datasets=None):
             algorithm.adapt(
                 source_loader=dataloaders["source_train"],
                 target_loader=dataloaders["target_train"],
-                target_marginal=estimated_marginal[f"{config.estimation_method}"],
-                source_marginal=estimated_marginal["source"],
+                # TODO: Fix
+                # target_marginal=estimated_marginal[f"{config.estimation_method}"],
+                # source_marginal=estimated_marginal["source"],
             )
         else:
             if config.adapt_with_source_ratio_balanced:

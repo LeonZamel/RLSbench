@@ -2,7 +2,7 @@
 
 from RLSbench.algorithms.initializer import ALGORITHMS_REGISTRY
 
-algorithms = ALGORITHMS_REGISTRY.available
+algorithms = lambda: ALGORITHMS_REGISTRY.available
 
 label_shift_adapt = ["MLLS", "true", "RLLS", "None", "baseline"]
 

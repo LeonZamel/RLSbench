@@ -126,19 +126,19 @@ ALGORITHMS_REGISTRY.register_multiname(
 def initialize_algorithm(config, datasets, dataloader):
     logger.info(f"Initializing algorithm {config.algorithm} ...")
 
-    source_dataset = datasets["source_train"]
-    trainloader_source = dataloader["source_train"]
+    # source_dataset = datasets["source_train"]
+    # trainloader_source = dataloader["source_train"]
 
     # Other config
-    n_train_steps = (
-        len(trainloader_source) * config.n_epochs // config.gradient_accumulation_steps
-    )
+    # n_train_steps = (
+    #     len(trainloader_source) * config.n_epochs // config.gradient_accumulation_steps
+    # )
 
     initializer = ALGORITHMS_REGISTRY.get(config.algorithm)
     if initializer is None:
         raise ValueError(f"Algorithm {config.algorithm} not recognized")
 
-    algorithm = initializer(config, datasets, dataloader, n_train_steps)
+    algorithm = initializer(config, datasets, dataloader, 1)  # n_train_steps)
 
     # TODO: Make these initializable
     # if config.algorithm in ("ERM-adv"):

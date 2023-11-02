@@ -50,10 +50,11 @@ def populate_defaults(config):
             config.target_split is not None
         ), "target_split must be specified if use_target is True"
 
-    if config.eval_only:
-        assert (
-            config.use_source_model is not None
-        ), "use_source_model must be True if eval_only is True"
+    # TODO: Doesnt have to be, e.g. if model is pretrained already
+    # if config.eval_only:
+    #     assert (
+    #         config.use_source_model is not None
+    #     ), "use_source_model must be True if eval_only is True"
 
     if config.use_source_model:
         assert (

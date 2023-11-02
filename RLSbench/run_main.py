@@ -221,7 +221,7 @@ def get_parser():
     )
 
     # Algorithm
-    parser.add_argument("--algorithm", required=True, choices=supported.algorithms)
+    parser.add_argument("--algorithm", required=True, choices=supported.algorithms())
     parser.add_argument(
         "--dann_kwargs",
         nargs="*",
