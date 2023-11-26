@@ -1587,7 +1587,6 @@ def get_visda(
 
     ImageFolder = dataset_with_targets(torch_ImageFolder)
 
-    print(seed, source, target, target_split)
     if source or (target and target_split == 0):
         sourceset = ImageFolder(f"{root_dir}/train")
 
@@ -1611,9 +1610,6 @@ def get_visda(
 
         a = sourceset.y_array[source_trainset_idx]
         b = sourceset.y_array[source_testset_idx]
-        print(Counter(a))
-        print(Counter(b))
-        print((source_trainset_idx.mean(), (source_testset_idx.mean())))
 
         source_trainset = Subset(
             sourceset, source_trainset_idx, transform=transforms["source_train"]
@@ -1692,6 +1688,9 @@ def get_visda(
         datasets["source_test"] = source_testset
         datasets["target_train"] = target_trainset
         datasets["target_test"] = target_testset
+
+        for d in datasets:
+            print(len(d))
 
     elif source:
         datasets["source_train"] = source_trainset

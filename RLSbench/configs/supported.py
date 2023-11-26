@@ -17,6 +17,7 @@ transforms = [
     "clip",
     "bert",
     "None",
+    "from_model_pretraining",
 ]
 
 additional_transforms = ["randaugment", "weak", "flip_crop_jitter"]

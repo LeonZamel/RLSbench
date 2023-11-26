@@ -17,6 +17,10 @@ from transformers import BertTokenizerFast, DistilBertTokenizerFast
 _DEFAULT_IMAGE_TENSOR_NORMALIZATION_MEAN = [0.485, 0.456, 0.406]
 _DEFAULT_IMAGE_TENSOR_NORMALIZATION_STD = [0.229, 0.224, 0.225]
 
+from RLSbench.registry import Registry
+
+MODEL_TRANSFORMS_REGISTRY = Registry("model_transforms")
+
 
 def initialize_transform(
     transform_name,
@@ -34,6 +38,8 @@ def initialize_transform(
         return None
     elif transform_name == "None" or transform_name == "none":
         return None
+    elif transform_name == "from_model_pretraining":
+        return MODEL_TRANSFORMS_REGISTRY.get(config.model)
     elif transform_name == "to_tensor":
         return transforms.Compose(
             [
@@ -77,7 +83,6 @@ def initialize_transform(
             config, transform_steps, default_normalization
         )
         transform = MultipleTransforms(transformations)
-
     elif additional_transform_name == "randaugment":
         transform = add_rand_augment_transform(
             config, transform_steps, default_normalization

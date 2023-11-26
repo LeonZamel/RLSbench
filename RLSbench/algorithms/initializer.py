@@ -101,6 +101,7 @@ def init_ERM(config, datasets, dataloader, n_train_steps):
 ALGORITHMS_REGISTRY.register_multiname(
     [
         "ERM",
+        "ERM-aug",
         "ERM-rand",
         "ERM-imagenet",
         "ERM-clip",

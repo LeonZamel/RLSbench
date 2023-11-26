@@ -15,6 +15,15 @@ algorithm_defaults = {
         "randaugment_n": 2,
         "save_every": 1,
     },
+    "ERM-aug-rand": {
+        "use_source": True,
+        "use_target": False,
+        "use_unlabeled_y": False,
+        "source_balanced": False,
+        "additional_train_transform": "randaugment",
+        "randaugment_n": 2,
+        "save_every": 1,
+    },
     "ERM-oracle": {
         "use_source": True,
         "use_target": True,
