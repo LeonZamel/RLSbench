@@ -1606,11 +1606,6 @@ def get_visda(
             source_idx[source_testset_idx],
         )
 
-        from collections import Counter
-
-        a = sourceset.y_array[source_trainset_idx]
-        b = sourceset.y_array[source_testset_idx]
-
         source_trainset = Subset(
             sourceset, source_trainset_idx, transform=transforms["source_train"]
         )

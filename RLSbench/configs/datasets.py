@@ -302,7 +302,7 @@ dataset_defaults = {
         "num_classes": 12,
         "model": "resnet50",
         "optimizer": "SGD",
-        # "optimizer_kwargs": {"momentum": 0.9},
+        "optimizer_kwargs": {"momentum": 0.9},
         "batch_size": 96,
         "n_epochs": 10,
         "lr": 0.01,
